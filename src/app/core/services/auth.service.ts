@@ -29,7 +29,7 @@ export class AuthService {
   private router = inject(Router);
   private platformId = inject(PLATFORM_ID);
 
-  private readonly API_URL = 'http://localhost:4000/api/v1/auth';
+  private readonly API_URL = 'https://physio-care-mu.vercel.app/api/v1/auth';
   private currentUserSubject: BehaviorSubject<User | null>;
   public currentUser$: Observable<User | null>;
 
@@ -135,12 +135,12 @@ export class AuthService {
 
   // Quick switch or demo login fallback
   loginAs(role: 'patient' | 'doctor' | 'admin') {
-    const defaultEmail = role === 'admin' 
-      ? 'admin@physiocare.com' 
+    const defaultEmail = role === 'admin'
+      ? 'admin@physiocare.com'
       : (role === 'doctor' ? 'doctor@physiocare.com' : 'patient@physiocare.com');
     const defaultPassword = 'password123';
-    const defaultName = role === 'admin' 
-      ? 'System Administrator' 
+    const defaultName = role === 'admin'
+      ? 'System Administrator'
       : (role === 'doctor' ? 'Dr. Sarah Ahmed, DPT' : 'Ahmed Mohamed');
 
     // Attempt backend login first

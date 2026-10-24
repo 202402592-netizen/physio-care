@@ -49,7 +49,7 @@ export class Login {
         if (err.status === 401) {
           this.errorMessage = 'Incorrect email or password. Please verify your credentials.';
         } else if (err.status === 0) {
-          this.errorMessage = 'Cannot reach authentication server at http://localhost:4000. Please ensure the backend is running.';
+          this.errorMessage = 'Cannot reach the server. Please try again later.';
         } else {
           this.errorMessage = err.error?.message || 'Authentication failed. Please try again.';
         }

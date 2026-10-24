@@ -62,7 +62,7 @@ export class Register {
         if (err.status === 400 && err.error?.message?.includes('duplicate key')) {
           this.errorMessage = 'An account with this email address already exists. Please log in.';
         } else if (err.status === 0) {
-          this.errorMessage = 'Cannot reach backend server on http://localhost:4000. Please ensure the backend is running.';
+          this.errorMessage = 'Cannot reach the server. Please try again later.';
         } else {
           this.errorMessage = err.error?.message || 'Registration failed. Please try again.';
         }
