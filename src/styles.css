@@ -1,0 +1,102 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap');
+
+:root {
+  --pc-primary: #194cbe;
+  --pc-primary-hover: #12388c;
+  --pc-secondary: #108560;
+  --pc-bg: #f4f6fa;
+  --pc-text-main: #2c3547;
+  --pc-text-muted: #6b7280;
+  --pc-border: #e5e7eb;
+  --pc-card-bg: #ffffff;
+  --pc-sidebar-bg: #ffffff;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--pc-bg);
+  color: var(--pc-text-main);
+  margin: 0;
+  padding: 0;
+}
+
+h1, h2, h3, h4, h5, h6, .navbar-brand {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+}
+
+.btn-primary {
+  background-color: var(--pc-primary);
+  border-color: var(--pc-primary);
+}
+
+.btn-primary:hover {
+  background-color: var(--pc-primary-hover);
+  border-color: var(--pc-primary-hover);
+}
+
+.text-primary {
+  color: var(--pc-primary) !important;
+}
+
+.text-success-custom {
+  color: var(--pc-secondary) !important;
+}
+
+.bg-success-custom {
+  background-color: var(--pc-secondary) !important;
+}
+
+.card {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
+.form-control {
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--pc-border);
+}
+
+.form-control:focus {
+  border-color: var(--pc-primary);
+  box-shadow: 0 0 0 0.25rem rgba(25, 76, 190, 0.25);
+}
+
+.btn {
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+}
+
+/* Custom utilities */
+.rounded-xl {
+  border-radius: 1rem;
+}
+.rounded-2xl {
+  border-radius: 1.5rem;
+}
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.sidebar-link {
+  color: var(--pc-text-main);
+  text-decoration: none;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.sidebar-link:hover, .sidebar-link.active {
+  background-color: var(--pc-primary);
+  color: white;
+}

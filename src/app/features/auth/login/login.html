@@ -1,0 +1,153 @@
+<div class="container-fluid min-vh-100 d-flex align-items-center justify-content-center bg-light p-3 p-md-5">
+  <div class="card w-100 border-0 shadow-lg overflow-hidden rounded-2xl" style="max-width: 1200px;">
+    <div class="row g-0">
+      <!-- Left Branding -->
+      <div class="col-md-5 bg-white p-5 d-flex flex-column justify-content-between position-relative border-end">
+        <div class="d-flex align-items-center mb-5">
+          <i class="bi bi-plus-square-fill text-primary fs-3 me-2"></i>
+          <h4 class="mb-0 fw-bold">PhysioCare</h4>
+        </div>
+        
+        <div class="my-5 position-relative">
+          <div class="bg-primary bg-opacity-10 rounded-xl p-4 text-center border border-primary border-opacity-25">
+            <i class="bi bi-activity fs-1 text-primary mb-2 d-block"></i>
+            <h5 class="fw-bold mb-1">AI Kinetic Motion Tracking</h5>
+            <p class="text-muted small mb-0">Biomechanical accuracy at sub-degree precision & real-time telemetry.</p>
+          </div>
+        </div>
+
+        <div>
+          <h2 class="fw-bold mb-3">Your journey to better movement starts here.</h2>
+          <p class="text-muted">Manage your clinical recovery protocols, guided exercises, tele-rehab sessions, and range-of-motion metrics in one seamless place.</p>
+        </div>
+      </div>
+      
+      <!-- Right Form -->
+      <div class="col-md-7 bg-white p-5">
+        <div class="px-md-5 py-md-4">
+          <h2 class="fw-bold mb-2">Welcome back</h2>
+          <p class="text-muted mb-4">Sign in to continue your personalized rehabilitation program.</p>
+          
+          <!-- Error alert banner -->
+          @if (errorMessage) {
+            <div class="alert alert-danger d-flex align-items-center gap-2 rounded-xl mb-4 py-2" role="alert">
+              <i class="bi bi-exclamation-triangle-fill flex-shrink-0"></i>
+              <div class="small fw-semibold">{{ errorMessage }}</div>
+            </div>
+          }
+
+          <form (ngSubmit)="onSubmit()">
+            <div class="mb-4">
+              <label class="form-label small fw-bold text-muted">EMAIL ADDRESS</label>
+              <div class="input-group">
+                <span class="input-group-text bg-transparent text-muted"><i class="bi bi-envelope"></i></span>
+                <input type="email" 
+                       class="form-control border-start-0" 
+                       name="email"
+                       [(ngModel)]="email"
+                       placeholder="patient@physiocare.com" 
+                       required>
+              </div>
+            </div>
+            
+            <div class="mb-4">
+              <label class="form-label small fw-bold text-muted">PASSWORD</label>
+              <div class="input-group">
+                <span class="input-group-text bg-transparent text-muted"><i class="bi bi-lock"></i></span>
+                <input [type]="showPassword ? 'text' : 'password'" 
+                       class="form-control border-start-0 border-end-0" 
+                       name="password"
+                       [(ngModel)]="password"
+                       placeholder="••••••••••••" 
+                       required>
+                <button type="button" 
+                        class="input-group-text bg-transparent text-muted border-start-0" 
+                        (click)="togglePassword()">
+                  <i class="bi" [class.bi-eye]="!showPassword" [class.bi-eye-slash]="showPassword"></i>
+                </button>
+              </div>
+            </div>
+            
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="remember" name="rememberMe" [(ngModel)]="rememberMe">
+                <label class="form-check-label small" for="remember">Remember this device</label>
+              </div>
+              <button type="button" class="btn btn-link text-primary small text-decoration-none fw-bold p-0" (click)="openForgotPassword()">Forgot password?</button>
+            </div>
+            
+            <button type="submit" 
+                    class="btn btn-primary w-100 py-3 rounded-xl mb-4 fw-bold d-flex justify-content-center align-items-center gap-2"
+                    [disabled]="loading">
+              @if (loading) {
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                <span>Signing in...</span>
+              } @else {
+                <span>Sign In to PhysioCare</span>
+                <i class="bi bi-arrow-right"></i>
+              }
+            </button>
+
+            <div class="text-center position-relative mb-4">
+              <hr>
+              <span class="position-absolute top-50 start-50 translate-middle bg-white px-3 small text-muted fw-bold">OR QUICK DEMO LOGIN</span>
+            </div>
+
+            <div class="d-grid gap-2 mb-4">
+              <button type="button" class="btn btn-outline-primary py-2 rounded-xl d-flex justify-content-between align-items-center" (click)="loginAs('patient')">
+                <span class="mx-auto fw-bold">Login as Patient</span>
+                <i class="bi bi-person"></i>
+              </button>
+              <button type="button" class="btn btn-outline-success py-2 rounded-xl d-flex justify-content-between align-items-center" (click)="loginAs('doctor')">
+                <span class="mx-auto fw-bold">Login as Doctor</span>
+                <i class="bi bi-heart-pulse"></i>
+              </button>
+              <button type="button" class="btn btn-outline-dark py-2 rounded-xl d-flex justify-content-between align-items-center" (click)="loginAs('admin')">
+                <span class="mx-auto fw-bold">Login as Admin</span>
+                <i class="bi bi-shield-lock"></i>
+              </button>
+            </div>
+            
+            <p class="text-center small mb-0">
+              Don't have an assigned therapy account? <a routerLink="/register" class="text-primary text-decoration-none fw-bold">Create Account</a>
+            </p>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Forgot Password Modal -->
+@if (showForgotPasswordModal) {
+  <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.45); z-index: 1060;">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg rounded-2xl">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold">Reset Your Password</h5>
+          <button type="button" class="btn-close" (click)="closeForgotPassword()"></button>
+        </div>
+        <div class="modal-body p-4">
+          @if (forgotPasswordSuccess) {
+            <div class="alert alert-success d-flex align-items-center gap-2 rounded-xl">
+              <i class="bi bi-check-circle-fill fs-5"></i>
+              <div>A password reset instruction link has been sent to <strong>{{ forgotPasswordEmail }}</strong>.</div>
+            </div>
+          } @else {
+            <p class="text-muted small">Enter the email associated with your PhysioCare account. We will send a secure token link to reset your credentials.</p>
+            <div class="mb-3">
+              <label class="form-label small fw-bold text-muted">EMAIL ADDRESS</label>
+              <input type="email" class="form-control" [(ngModel)]="forgotPasswordEmail" placeholder="your.name@healthmail.com">
+            </div>
+          }
+        </div>
+        <div class="modal-footer border-0 pt-0">
+          @if (!forgotPasswordSuccess) {
+            <button type="button" class="btn btn-outline-secondary rounded-xl" (click)="closeForgotPassword()">Cancel</button>
+            <button type="button" class="btn btn-primary rounded-xl px-4" (click)="sendPasswordReset()">Send Reset Link</button>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+}

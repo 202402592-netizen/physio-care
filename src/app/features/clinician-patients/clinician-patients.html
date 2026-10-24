@@ -1,0 +1,265 @@
+<div class="container-fluid p-0">
+  <!-- Toast Notification -->
+  @if (showToast) {
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 1090;">
+      <div class="toast show align-items-center text-white bg-primary border-0 shadow-lg rounded-xl" role="alert">
+        <div class="d-flex">
+          <div class="toast-body d-flex align-items-center gap-2">
+            <i class="bi bi-people-fill fs-5"></i>
+            <div>{{ toastMessage }}</div>
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" (click)="showToast = false"></button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+      <h2 class="fw-bold mb-2">My Patients <span class="badge bg-primary bg-opacity-10 text-primary ms-2 rounded-pill fs-6"><i class="bi bi-shield-check me-1"></i> HIPAA Compliant</span></h2>
+      <p class="text-muted mb-0">Manage your active rehabilitation caseload, sensor adherence scores, pain trajectories, and clinical clearance pathways.</p>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-secondary bg-white rounded-xl" (click)="exportRecords()">
+        <i class="bi bi-download me-2"></i> Export Records
+      </button>
+      <button class="btn btn-primary rounded-xl px-4" (click)="openAddPatient()">
+        <i class="bi bi-person-plus me-2"></i> Add Patient
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="row g-4 mb-4">
+    @for (stat of stats; track stat.label) {
+      <div class="col-md-3">
+        <div class="card p-4 h-100 border-0 shadow-sm">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="small fw-bold text-muted">{{stat.label}}</span>
+            <div class="bg-{{stat.iconBg}} bg-opacity-10 p-2 rounded text-{{stat.iconBg}}"><i class="bi {{stat.icon}}"></i></div>
+          </div>
+          <h1 class="fw-bold mb-3">{{stat.value}}</h1>
+          <div class="d-flex align-items-center gap-2 small">
+            <span class="fw-bold text-{{stat.trendColor}}">{{stat.trend}}</span>
+            <span class="text-muted">{{stat.subText}}</span>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Search & Filter Card -->
+  <div class="card p-0 border-0 shadow-sm overflow-hidden mb-5">
+    <div class="p-3 border-bottom bg-white d-flex justify-content-between align-items-center flex-wrap gap-3">
+      <div class="d-flex gap-4 small fw-bold text-muted overflow-auto">
+        @for (f of ['All', 'Active', 'Needs Attention', 'Re-assessment Due', 'Discharged / Completed']; track f) {
+          <a href="#" class="pb-2 text-decoration-none" 
+             [class.text-primary]="activeFilter === f" 
+             [class.border-bottom]="activeFilter === f" 
+             [class.border-primary]="activeFilter === f" 
+             [class.border-2]="activeFilter === f"
+             [class.text-muted]="activeFilter !== f" 
+             (click)="setFilter(f, $event)">
+            {{ f }}
+          </a>
+        }
+      </div>
+
+      <div class="position-relative" style="width: 250px;">
+        <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+        <input type="text" class="form-control form-control-sm rounded-pill ps-5 bg-light border-0" 
+               [(ngModel)]="searchQuery" placeholder="Filter by name, protocol...">
+      </div>
+    </div>
+    
+    <!-- Table -->
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="bg-light small text-muted">
+          <tr>
+            <th class="ps-4 py-3 fw-bold border-bottom-0">PATIENT</th>
+            <th class="py-3 fw-bold border-bottom-0">TREATMENT & PROTOCOL</th>
+            <th class="py-3 fw-bold border-bottom-0">PAIN (VAS)</th>
+            <th class="py-3 fw-bold border-bottom-0">PROGRESS</th>
+            <th class="py-3 fw-bold border-bottom-0">COMPLIANCE</th>
+            <th class="py-3 fw-bold border-bottom-0">LAST SESSION</th>
+            <th class="pe-4 py-3 fw-bold border-bottom-0">CLINICAL STATUS</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (patient of filteredPatients; track patient.id) {
+            <tr style="cursor: pointer;" (click)="selectPatient(patient)" title="Click to view dossier">
+              <td class="ps-4 py-3">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="position-relative">
+                    <img src="https://ui-avatars.com/api/?name={{patient.name}}&background=194cbe&color=fff" class="rounded-circle" width="40" height="40">
+                    <span class="position-absolute bottom-0 end-0 p-1 bg-{{patient.statusColor}} border border-white rounded-circle"></span>
+                  </div>
+                  <div>
+                    <div class="fw-bold">{{patient.name}}</div>
+                    <div class="small text-muted">{{patient.id}} • {{patient.age}}y, {{patient.gender}}</div>
+                  </div>
+                </div>
+              </td>
+              <td class="py-3" style="max-width: 220px;">
+                <div class="small fw-bold">{{patient.protocol.split('•')[0]}}</div>
+                <div class="small text-muted">{{patient.protocol.split('•')[1] || 'Standard Plan'}}</div>
+              </td>
+              <td class="py-3">
+                <div class="d-flex align-items-center gap-2">
+                  <span class="fw-bold">{{patient.pain}}</span>
+                  @if (patient.painTrend) {
+                    <span class="badge bg-{{patient.painTrendColor || 'success'}} bg-opacity-10 text-{{patient.painTrendColor || 'success'}}">{{patient.painTrend}}</span>
+                  }
+                </div>
+              </td>
+              <td class="py-3" style="width: 150px;">
+                <div class="d-flex justify-content-between small fw-bold mb-1">
+                  <span>{{patient.progressLabel}}</span>
+                  <span class="text-{{patient.progressColor}}">{{patient.progressValue}}</span>
+                </div>
+                <div class="progress" style="height: 4px;">
+                  <div class="progress-bar bg-{{patient.progressColor}}" [style.width]="patient.progressValue"></div>
+                </div>
+              </td>
+              <td class="py-3">
+                <div class="fw-bold text-{{patient.complianceColor}}">{{patient.compliance}}</div>
+                <div class="small text-{{patient.complianceColor}} opacity-75">{{patient.complianceSub}}</div>
+              </td>
+              <td class="py-3 small">
+                <div class="fw-bold">{{patient.sessionDate}}</div>
+                <div class="text-muted">{{patient.sessionType}}</div>
+              </td>
+              <td class="pe-4 py-3">
+                <span class="badge bg-{{patient.statusColor}} bg-opacity-10 text-{{patient.statusColor}} rounded-pill px-3 py-2"><i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i> {{patient.status}}</span>
+              </td>
+            </tr>
+          }
+          @if (filteredPatients.length === 0) {
+            <tr>
+              <td colspan="7" class="text-center py-4 text-muted">
+                No patients match the current filter or search criteria.
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    
+    <div class="p-3 border-top bg-white d-flex justify-content-between align-items-center small text-muted">
+      <div>Showing <strong>{{ filteredPatients.length }}</strong> of <strong>{{ patients.length }}</strong> patients</div>
+      <div class="d-flex align-items-center gap-3">
+        <span>Rows: <select class="form-select form-select-sm d-inline-block w-auto"><option>10 per page</option></select></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Patient Modal -->
+@if (showAddPatientModal) {
+  <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.45); z-index: 1060;">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg rounded-2xl">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold">Enroll New Patient</h5>
+          <button type="button" class="btn-close" (click)="closeAddPatient()"></button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-muted">PATIENT FULL NAME</label>
+            <input type="text" class="form-control" [(ngModel)]="newPatient.name" placeholder="e.g. David Miller">
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-6">
+              <label class="form-label small fw-bold text-muted">AGE</label>
+              <input type="number" class="form-control" [(ngModel)]="newPatient.age">
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-bold text-muted">GENDER</label>
+              <select class="form-select" [(ngModel)]="newPatient.gender">
+                <option>Male</option>
+                <option>Female</option>
+                <option>Other</option>
+              </select>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-muted">PRIMARY REHAB PROTOCOL</label>
+            <input type="text" class="form-control" [(ngModel)]="newPatient.protocol" placeholder="e.g. Knee Protocol Phase 1 • Acute Protection">
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-muted">INITIAL PAIN (VAS SCORE)</label>
+            <select class="form-select" [(ngModel)]="newPatient.pain">
+              <option>2/10 (Mild)</option>
+              <option>4/10 (Moderate)</option>
+              <option>6/10 (Elevated)</option>
+              <option>8/10 (Severe)</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-0 d-flex gap-2">
+          <button type="button" class="btn btn-outline-secondary rounded-xl flex-grow-1" (click)="closeAddPatient()">Cancel</button>
+          <button type="button" class="btn btn-primary rounded-xl flex-grow-1" (click)="savePatient()">Enroll Patient</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Patient Quick Dossier Slide Modal -->
+@if (showPatientDossierModal && selectedPatient) {
+  <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.45); z-index: 1060;">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg rounded-2xl">
+        <div class="modal-header border-0 pb-0">
+          <div class="d-flex align-items-center gap-3">
+            <img src="https://ui-avatars.com/api/?name={{selectedPatient.name}}&background=194cbe&color=fff" class="rounded-circle" width="50" height="50">
+            <div>
+              <h5 class="modal-title fw-bold mb-0">{{ selectedPatient.name }}</h5>
+              <small class="text-muted">{{ selectedPatient.id }} • {{ selectedPatient.age }}y, {{ selectedPatient.gender }}</small>
+            </div>
+          </div>
+          <button type="button" class="btn-close" (click)="closeDossier()"></button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="p-3 bg-light rounded-xl mb-3">
+            <div class="small fw-bold text-muted">PROTOCOL & STATUS</div>
+            <div class="fw-bold">{{ selectedPatient.protocol }}</div>
+            <span class="badge bg-{{selectedPatient.statusColor}} bg-opacity-10 text-{{selectedPatient.statusColor}} mt-1">
+              {{ selectedPatient.status }}
+            </span>
+          </div>
+
+          <div class="row g-3 text-center mb-3">
+            <div class="col-4">
+              <div class="p-2 border rounded-xl">
+                <small class="text-muted d-block">Pain Score</small>
+                <strong class="text-danger fs-5">{{ selectedPatient.pain }}</strong>
+              </div>
+            </div>
+            <div class="col-4">
+              <div class="p-2 border rounded-xl">
+                <small class="text-muted d-block">Compliance</small>
+                <strong class="text-success fs-5">{{ selectedPatient.compliance }}</strong>
+              </div>
+            </div>
+            <div class="col-4">
+              <div class="p-2 border rounded-xl">
+                <small class="text-muted d-block">Progress</small>
+                <strong class="text-primary fs-5">{{ selectedPatient.progressValue }}</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="small text-muted">
+            <i class="bi bi-clock me-1"></i> Last Activity: <strong>{{ selectedPatient.sessionDate }} ({{ selectedPatient.sessionType }})</strong>
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn btn-primary rounded-xl w-100" (click)="closeDossier()">Close Dossier</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

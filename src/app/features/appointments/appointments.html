@@ -1,0 +1,240 @@
+<div class="container-fluid p-0">
+  <!-- Toast Notification -->
+  @if (showToast) {
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 1090;">
+      <div class="toast show align-items-center text-white bg-primary border-0 shadow-lg rounded-xl" role="alert">
+        <div class="d-flex">
+          <div class="toast-body d-flex align-items-center gap-2">
+            <i class="bi bi-calendar-check-fill fs-5"></i>
+            <div>{{ toastMessage }}</div>
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" (click)="showToast = false"></button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+      <h2 class="fw-bold mb-2">Appointments <span class="badge bg-success-custom bg-opacity-10 text-success-custom fs-6 ms-2 rounded-pill">Knee Protocol (Phase 2)</span></h2>
+      <p class="text-muted mb-0">Manage your upcoming sessions, track clinical rehabilitation progress, and schedule follow-up evaluations.</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <div class="btn-group" role="group">
+        <button class="btn btn-outline-secondary rounded-start-xl" 
+                [class.btn-primary]="viewMode === 'split'" 
+                [class.text-white]="viewMode === 'split'"
+                [class.bg-white]="viewMode !== 'split'" 
+                (click)="viewMode = 'split'">
+          <i class="bi bi-layout-split me-1"></i> Split View
+        </button>
+        <button class="btn btn-outline-secondary" 
+                [class.btn-primary]="viewMode === 'list'" 
+                [class.text-white]="viewMode === 'list'"
+                [class.bg-white]="viewMode !== 'list'" 
+                (click)="viewMode = 'list'">
+          <i class="bi bi-list-ul me-1"></i> List
+        </button>
+        <button class="btn btn-outline-secondary rounded-end-xl" 
+                [class.btn-primary]="viewMode === 'calendar'" 
+                [class.text-white]="viewMode === 'calendar'"
+                [class.bg-white]="viewMode !== 'calendar'" 
+                (click)="viewMode = 'calendar'">
+          <i class="bi bi-calendar3 me-1"></i> Calendar
+        </button>
+      </div>
+
+      <div class="dropdown">
+        <button class="btn btn-outline-secondary bg-white rounded-xl" 
+                (click)="filterStatus = filterStatus === 'all' ? 'confirmed' : 'all'">
+          <i class="bi bi-funnel me-1"></i> Filter: <span class="fw-bold text-dark">{{ filterStatus | titlecase }}</span>
+        </button>
+      </div>
+
+      <button class="btn btn-primary rounded-xl" (click)="openBookModal()">
+        <i class="bi bi-plus-lg me-2"></i> Book Appointment
+      </button>
+    </div>
+  </div>
+
+  <!-- Next Upcoming Session Card -->
+  <div class="card p-4 mb-4 border-0 shadow-sm">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-2 fw-bold">NEXT UPCOMING SESSION</span>
+      <span class="badge bg-success bg-opacity-10 text-success rounded-pill"><i class="bi bi-check-circle-fill me-1"></i> Confirmed Appointment</span>
+    </div>
+    <div class="row align-items-center g-3">
+      <div class="col-md-5 d-flex gap-3">
+        <img src="https://ui-avatars.com/api/?name=Sarah+Ahmed&background=194cbe&color=fff" class="rounded border" width="60" height="60" alt="Dr. Sarah Ahmed">
+        <div>
+          <h5 class="fw-bold mb-1">{{ nextSession.title }}</h5>
+          <p class="small text-muted mb-1">{{ nextSession.specialty }}</p>
+          <div class="text-warning small"><i class="bi bi-star-fill"></i> {{ nextSession.rating }}</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="mb-2"><i class="bi bi-calendar-event text-primary me-2"></i> <strong>{{ nextSession.date }}</strong><br><small class="text-muted ms-4">{{ nextSession.time }}</small></div>
+        <div class="mb-1"><span class="badge bg-light border text-dark"><i class="bi bi-building me-1"></i> {{ nextSession.location }}</span></div>
+        <div><span class="badge bg-success bg-opacity-10 text-success"><i class="bi bi-camera-video me-1"></i> Tele-Rehab Backup Active</span></div>
+      </div>
+      <div class="col-md-3 text-end">
+        <button class="btn btn-primary w-100 rounded-xl mb-2" (click)="openPrepModal()">
+          View Details & Prep <i class="bi bi-arrow-right ms-1"></i>
+        </button>
+        <button class="btn btn-outline-secondary w-100 rounded-xl mb-2" (click)="addToCalendar()">
+          <i class="bi bi-calendar-plus me-2"></i> Add to Calendar
+        </button>
+        <div class="d-flex justify-content-between small">
+          <button class="btn btn-link p-0 text-muted text-decoration-none small" (click)="openRescheduleModal(nextSession)">
+            <i class="bi bi-arrow-repeat me-1"></i> Reschedule
+          </button>
+          <button class="btn btn-link p-0 text-danger text-decoration-none small" (click)="cancelSession(nextSession)">
+            Cancel Session
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scheduled Pipeline -->
+  <h5 class="fw-bold mb-3">Scheduled Pipeline <span class="badge bg-light text-dark border ms-2">{{ filteredSessions.length }}</span></h5>
+  
+  <div class="d-flex flex-column gap-3 mb-5">
+    @for (session of filteredSessions; track session.id) {
+      <div class="card p-3 d-flex flex-row align-items-center border-0 shadow-sm">
+        <div class="bg-light rounded p-3 text-center me-4" style="min-width: 70px;">
+          <div class="small fw-bold text-primary">{{ session.date.split(' ')[0] }}</div>
+          <h4 class="fw-bold mb-0">{{ session.date.split(' ')[1] }}</h4>
+        </div>
+        <div class="flex-grow-1">
+          <h6 class="fw-bold mb-2">{{ session.title }}</h6>
+          <div class="d-flex gap-3 small flex-wrap">
+            <span class="badge {{ session.status === 'Confirmed' ? 'bg-success-custom bg-opacity-10 text-success-custom' : (session.status === 'Scheduled' ? 'bg-primary bg-opacity-10 text-primary' : (session.status === 'Cancelled' ? 'bg-danger bg-opacity-10 text-danger' : 'bg-warning bg-opacity-10 text-warning')) }} rounded-pill">{{ session.status }}</span>
+            <span class="text-muted"><i class="bi bi-clock me-1"></i> {{ session.time }}</span>
+            <span class="text-muted"><i class="bi bi-geo-alt me-1"></i> {{ session.location }}</span>
+            <span class="text-muted"><i class="bi bi-person me-1"></i> {{ session.doctor }}</span>
+          </div>
+        </div>
+        <div class="text-end">
+          <button class="btn btn-light rounded-xl mb-1 fw-bold" (click)="openPrepModal()">View Details</button><br>
+          <button class="btn btn-link p-0 small text-muted text-decoration-none" (click)="openRescheduleModal(session)">Reschedule</button>
+        </div>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- Book Appointment Modal -->
+@if (showBookModal) {
+  <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.45); z-index: 1060;">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg rounded-2xl">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold">Book Physical Rehabilitation Session</h5>
+          <button type="button" class="btn-close" (click)="closeBookModal()"></button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-muted">SESSION PURPOSE / TITLE</label>
+            <input type="text" class="form-control" [(ngModel)]="bookForm.title">
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-6">
+              <label class="form-label small fw-bold text-muted">DATE</label>
+              <input type="date" class="form-control" [(ngModel)]="bookForm.date">
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-bold text-muted">PREFERRED TIME</label>
+              <select class="form-select" [(ngModel)]="bookForm.time">
+                <option>09:00 AM (45 min)</option>
+                <option>10:00 AM (45 min)</option>
+                <option>11:00 AM (45 min)</option>
+                <option>02:00 PM (45 min)</option>
+                <option>03:30 PM (45 min)</option>
+              </select>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-muted">CLINICAL LOCATION</label>
+            <select class="form-select" [(ngModel)]="bookForm.location">
+              <option>In-Clinic • Room 3B (Main Hub)</option>
+              <option>Tele-Rehab (High-Definition Video)</option>
+              <option>Motion Lab 1 (Goniometer Sync)</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-0 d-flex gap-2">
+          <button type="button" class="btn btn-outline-secondary rounded-xl flex-grow-1" (click)="closeBookModal()">Cancel</button>
+          <button type="button" class="btn btn-primary rounded-xl flex-grow-1" (click)="confirmBooking()">Confirm & Book</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Prep Checklist Modal -->
+@if (showPrepModal) {
+  <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.45); z-index: 1060;">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg rounded-2xl">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold">Session Preparation Checklist</h5>
+          <button type="button" class="btn-close" (click)="closePrepModal()"></button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="alert alert-info rounded-xl small mb-3">
+            <i class="bi bi-info-circle-fill me-1"></i> Follow these clinical steps prior to your appointment:
+          </div>
+          <ul class="list-group list-group-flush mb-3">
+            <li class="list-group-item px-0 d-flex align-items-center gap-2">
+              <i class="bi bi-check-circle-fill text-success"></i> Wear athletic clothing allowing unobstructed knee movement.
+            </li>
+            <li class="list-group-item px-0 d-flex align-items-center gap-2">
+              <i class="bi bi-check-circle-fill text-success"></i> Bring prescribed hinged knee brace and telemetry strap.
+            </li>
+            <li class="list-group-item px-0 d-flex align-items-center gap-2">
+              <i class="bi bi-check-circle-fill text-success"></i> Complete today's pain log in the My Progress portal.
+            </li>
+          </ul>
+          <div class="p-3 bg-light rounded-xl small text-muted">
+            <strong>Room Instructions:</strong> Check in at Reception Station #4 upon arrival. Water and locker facilities available.
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn btn-primary rounded-xl w-100" (click)="closePrepModal()">Acknowledge & Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Reschedule Modal -->
+@if (showRescheduleModal) {
+  <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.45); z-index: 1060;">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg rounded-2xl">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold">Reschedule Session</h5>
+          <button type="button" class="btn-close" (click)="closeRescheduleModal()"></button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="row g-3">
+            <div class="col-6">
+              <label class="form-label small fw-bold text-muted">NEW DATE</label>
+              <input type="date" class="form-control" [(ngModel)]="rescheduleDate">
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-bold text-muted">NEW TIME</label>
+              <input type="time" class="form-control" [(ngModel)]="rescheduleTime">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-0 d-flex gap-2">
+          <button type="button" class="btn btn-outline-secondary rounded-xl flex-grow-1" (click)="closeRescheduleModal()">Cancel</button>
+          <button type="button" class="btn btn-primary rounded-xl flex-grow-1" (click)="saveReschedule()">Save New Time</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

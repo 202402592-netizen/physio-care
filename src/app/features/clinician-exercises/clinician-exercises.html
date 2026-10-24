@@ -1,0 +1,252 @@
+<div class="container-fluid p-0">
+  <!-- Toast Notification -->
+  @if (showToast) {
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 1090;">
+      <div class="toast show align-items-center text-white bg-primary border-0 shadow-lg rounded-xl" role="alert">
+        <div class="d-flex">
+          <div class="toast-body d-flex align-items-center gap-2">
+            <i class="bi bi-journal-medical fs-5"></i>
+            <div>{{ toastMessage }}</div>
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" (click)="showToast = false"></button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+      <h2 class="fw-bold mb-2">Exercise Library <span class="badge bg-success bg-opacity-10 text-success ms-2 rounded-pill fs-6"><i class="bi bi-shield-check me-1"></i> CLINICAL REPOSITORY</span></h2>
+      <p class="text-muted mb-0">Browse, filter, and assign evidence-based rehabilitation protocols calibrated for wearable biofeedback tracking.</p>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-secondary bg-white rounded-xl" (click)="triggerToast('Protocol templates loaded.')">
+        <i class="bi bi-journal-text me-2"></i> Protocol Templates
+      </button>
+      <button class="btn btn-primary rounded-xl px-4" (click)="openAddProtocol()">
+        <i class="bi bi-plus-lg me-2"></i> Add New Protocol
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="row g-4 mb-4">
+    @for (stat of stats; track stat.label) {
+      <div class="col-md-3">
+        <div class="card p-3 h-100 border-0 shadow-sm d-flex flex-row align-items-center gap-3">
+          <div class="bg-{{stat.color}} bg-opacity-10 p-3 rounded-circle text-{{stat.color}}"><i class="bi {{stat.icon}} fs-4"></i></div>
+          <div>
+            <h3 class="fw-bold mb-0">{{stat.value}}</h3>
+            <span class="small text-muted">{{stat.label}}</span>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Search & View Controls -->
+  <div class="card p-3 border-0 shadow-sm mb-4">
+    <div class="row g-3 align-items-center">
+      <div class="col-md-6 position-relative">
+        <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-4 text-muted"></i>
+        <input type="text" class="form-control rounded-pill ps-5 bg-light border-0" 
+               [(ngModel)]="searchQuery" placeholder="Search knee extension, wall squat...">
+      </div>
+      <div class="col-md-6 d-flex justify-content-end gap-2">
+        <div class="btn-group" role="group">
+          <button type="button" class="btn" 
+                  [class.btn-primary]="viewMode === 'grid'" 
+                  [class.btn-outline-secondary]="viewMode !== 'grid'"
+                  [class.bg-white]="viewMode !== 'grid'"
+                  (click)="viewMode = 'grid'">
+            <i class="bi bi-grid-fill me-1"></i> Grid
+          </button>
+          <button type="button" class="btn" 
+                  [class.btn-primary]="viewMode === 'list'" 
+                  [class.btn-outline-secondary]="viewMode !== 'list'"
+                  [class.bg-white]="viewMode !== 'list'"
+                  (click)="viewMode = 'list'">
+            <i class="bi bi-list-ul me-1"></i> List
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="d-flex gap-2 mt-3 overflow-auto pb-2 flex-wrap">
+      @for (tag of ['All', 'Quadriceps', 'Hamstrings', 'Knee / Core', 'Beginner', 'Intermediate']; track tag) {
+        <button class="btn btn-sm rounded-pill px-3" 
+                [class.btn-primary]="activeTagFilter === tag"
+                [class.btn-outline-secondary]="activeTagFilter !== tag"
+                [class.bg-light]="activeTagFilter !== tag"
+                (click)="setTagFilter(tag)">
+          {{ tag }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Main Protocols List -->
+    <div class="col-md-8">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0">Protocols in Focus</h5>
+        <span class="small text-muted">Showing {{ filteredExercises.length }} protocols</span>
+      </div>
+      
+      <div class="row g-4">
+        @for (ex of filteredExercises; track ex.id) {
+          <div [class.col-md-6]="viewMode === 'grid'" [class.col-12]="viewMode === 'list'">
+            <div class="card h-100 border-0 shadow-sm overflow-hidden" 
+                 [class.border]="selectedExercise?.id === ex.id"
+                 [class.border-primary]="selectedExercise?.id === ex.id"
+                 [class.border-2]="selectedExercise?.id === ex.id"
+                 style="cursor: pointer;"
+                 (click)="selectExercise(ex)">
+              <div class="bg-light position-relative" style="height: 160px; display: flex; align-items: center; justify-content: center;">
+                <i class="bi bi-camera-video fs-1 text-primary opacity-50"></i>
+                <span class="position-absolute top-0 end-0 m-2 badge bg-dark bg-opacity-75">{{ex.id}}</span>
+                <span class="position-absolute bottom-0 start-0 m-2 badge bg-dark bg-opacity-75"><i class="bi bi-play-circle me-1"></i> {{ex.video}}</span>
+              </div>
+              <div class="p-4 d-flex flex-column h-100">
+                <div class="d-flex gap-1 mb-2 flex-wrap">
+                  @for (tag of ex.tags; track tag) {
+                    <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill">{{tag}}</span>
+                  }
+                </div>
+                <h6 class="fw-bold mb-2">{{ex.title}}</h6>
+                <p class="small text-muted mb-3">{{ex.desc}}</p>
+                
+                <div class="bg-light rounded p-2 mb-4 text-center small text-muted">
+                  <i class="bi bi-calendar2-check me-1"></i> {{ex.details}}
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center mt-auto">
+                  <span class="small text-success fw-bold"><i class="bi bi-activity me-1"></i> {{ex.telemetry}}</span>
+                  <button class="btn btn-outline-primary btn-sm rounded-xl px-3 fw-bold" (click)="openAssign(ex, $event)">
+                    Assign
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+    
+    <!-- Right Panel Preview -->
+    <div class="col-md-4">
+      <div class="card p-4 border-0 shadow-sm h-100 bg-white">
+        @if (selectedExercise) {
+          <div>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <span class="badge bg-primary rounded-pill">{{ selectedExercise.id }}</span>
+              <span class="badge bg-success bg-opacity-10 text-success rounded-pill"><i class="bi bi-check-circle-fill me-1"></i> Active Protocol</span>
+            </div>
+            
+            <h5 class="fw-bold mb-2">{{ selectedExercise.title }}</h5>
+            <p class="small text-muted mb-4">{{ selectedExercise.desc }}</p>
+
+            <div class="p-3 bg-light rounded-xl mb-3">
+              <div class="small fw-bold text-muted mb-1">PRESCRIPTION PARAMETERS</div>
+              <div class="fw-bold text-dark small">{{ selectedExercise.details }}</div>
+            </div>
+
+            <div class="p-3 bg-light rounded-xl mb-4">
+              <div class="small fw-bold text-muted mb-1">BIOMECHANICAL TELEMETRY</div>
+              <div class="fw-bold text-success small"><i class="bi bi-broadcast me-1"></i> {{ selectedExercise.telemetry }}</div>
+            </div>
+
+            <button class="btn btn-primary w-100 rounded-xl py-2 fw-bold mb-2" (click)="openAssign(selectedExercise, $event)">
+              <i class="bi bi-person-plus me-1"></i> Assign Protocol to Patient
+            </button>
+            <button class="btn btn-outline-secondary w-100 rounded-xl py-2 small" (click)="triggerToast('Protocol duplicated for custom tailoring.')">
+              <i class="bi bi-copy me-1"></i> Duplicate & Tailor
+            </button>
+          </div>
+        } @else {
+          <div class="text-center text-muted mt-5">
+            <i class="bi bi-hand-index-thumb fs-1 mb-3"></i>
+            <h5>Select an exercise</h5>
+            <p class="small">Click any exercise card to view full clinical guidance and telemetry calibrations.</p>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Protocol Modal -->
+@if (showAddModal) {
+  <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.45); z-index: 1060;">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg rounded-2xl">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold">Add Evidence-Based Protocol</h5>
+          <button type="button" class="btn-close" (click)="closeAddProtocol()"></button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-muted">PROTOCOL TITLE</label>
+            <input type="text" class="form-control" [(ngModel)]="newProtocol.title" placeholder="e.g. Terminal Knee Extension with Biofeedback">
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-muted">CLINICAL DESCRIPTION</label>
+            <textarea class="form-control" rows="3" [(ngModel)]="newProtocol.desc" placeholder="Explain anatomical motion, targeted muscle groups, and contraindications..."></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-muted">TAGS (COMMA SEPARATED)</label>
+            <input type="text" class="form-control" [(ngModel)]="newProtocol.tags">
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-muted">SETS & REPETITIONS PARAMETERS</label>
+            <input type="text" class="form-control" [(ngModel)]="newProtocol.details">
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-0 d-flex gap-2">
+          <button type="button" class="btn btn-outline-secondary rounded-xl flex-grow-1" (click)="closeAddProtocol()">Cancel</button>
+          <button type="button" class="btn btn-primary rounded-xl flex-grow-1" (click)="saveProtocol()">Create Protocol</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Assign Protocol Modal -->
+@if (showAssignModal && selectedExercise) {
+  <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.45); z-index: 1060;">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg rounded-2xl">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold">Assign Protocol to Patient</h5>
+          <button type="button" class="btn-close" (click)="closeAssign()"></button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="alert alert-light border small mb-3">
+            Assigning: <strong>{{ selectedExercise.title }}</strong> ({{ selectedExercise.id }})
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-muted">SELECT PATIENT</label>
+            <select class="form-select" [(ngModel)]="assignTarget.patientName">
+              <option>Ahmed Mohamed (#PC-4091)</option>
+              <option>Mariam Ali (#PC-3812)</option>
+              <option>Omar Hassan (#PC-4219)</option>
+              <option>Layla Nour (#PC-3104)</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-muted">SCHEDULED FREQUENCY</label>
+            <input type="text" class="form-control" [(ngModel)]="assignTarget.frequency">
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-muted">SPECIAL INSTRUCTIONS FOR PATIENT</label>
+            <textarea class="form-control" rows="2" [(ngModel)]="assignTarget.notes"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-0 d-flex gap-2">
+          <button type="button" class="btn btn-outline-secondary rounded-xl flex-grow-1" (click)="closeAssign()">Cancel</button>
+          <button type="button" class="btn btn-primary rounded-xl flex-grow-1" (click)="confirmAssign()">Confirm Assignment</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

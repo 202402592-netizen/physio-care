@@ -1,0 +1,166 @@
+<div class="container-fluid p-0">
+  <!-- Toast Notification -->
+  @if (showToast) {
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 1090;">
+      <div class="toast show align-items-center text-white bg-primary border-0 shadow-lg rounded-xl" role="alert">
+        <div class="d-flex">
+          <div class="toast-body d-flex align-items-center gap-2">
+            <i class="bi bi-check-circle-fill fs-5"></i>
+            <div>{{ toastMessage }}</div>
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" (click)="showToast = false"></button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+      <h2 class="fw-bold mb-1">My Exercises & Daily Routine</h2>
+      <p class="text-muted mb-0">Follow your prescribed clinical protocols with real-time biofeedback and form validation.</p>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+      <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-2 fw-bold">
+        <i class="bi bi-check2-all me-1"></i> {{ completedCount }} of {{ exerciseList.length }} Completed Today
+      </span>
+    </div>
+  </div>
+
+  <!-- Search and Categories Filter Bar -->
+  <div class="card p-3 border-0 shadow-sm mb-4">
+    <div class="row g-3 align-items-center">
+      <div class="col-md-5 position-relative">
+        <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+        <input type="text" 
+               class="form-control rounded-pill ps-5 bg-light border-0" 
+               [(ngModel)]="searchQuery" 
+               placeholder="Search by exercise or target muscle...">
+      </div>
+      <div class="col-md-7 d-flex justify-content-md-end gap-2 flex-wrap">
+        @for (cat of categories; track cat.id) {
+          <button class="btn btn-sm rounded-pill px-3" 
+                  [class.btn-primary]="activeCategory === cat.id"
+                  [class.btn-outline-secondary]="activeCategory !== cat.id"
+                  [class.bg-white]="activeCategory !== cat.id"
+                  (click)="setCategory(cat.id)">
+            {{ cat.label }}
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Exercise Grid -->
+  <div class="row g-4 mb-5">
+    @for (ex of filteredExercises; track ex.id) {
+      <div class="col-md-4">
+        <div class="card h-100 p-4 border-0 shadow-sm d-flex flex-column" [class.border-success]="ex.completed">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="badge bg-{{ex.difficultyColor}} bg-opacity-10 text-{{ex.difficultyColor}} rounded-pill">
+              {{ ex.difficulty }}
+            </span>
+            <span class="small text-muted"><i class="bi bi-clock me-1"></i> {{ ex.duration }}</span>
+          </div>
+
+          <div class="bg-light rounded-2xl mb-3 d-flex align-items-center justify-content-center position-relative" style="height: 140px;">
+            <i class="bi fs-1 text-{{ex.color}}" [class]="ex.icon"></i>
+            @if (ex.completed) {
+              <span class="position-absolute top-0 end-0 m-2 badge bg-success text-white rounded-pill px-3 py-1">
+                <i class="bi bi-check-circle-fill me-1"></i> Done
+              </span>
+            }
+          </div>
+
+          <h6 class="fw-bold mb-1">{{ ex.title }}</h6>
+          <div class="badge bg-light text-muted border rounded-pill align-self-start mb-2">{{ ex.target }}</div>
+          <p class="small text-muted mb-3">{{ ex.details }}</p>
+          <p class="small text-muted mb-4" style="font-size: 0.8rem;">{{ ex.instructions }}</p>
+
+          <div class="d-flex gap-2 mt-auto">
+            <button class="btn btn-primary rounded-xl flex-grow-1 fw-bold" (click)="openExerciseModal(ex)">
+              <i class="bi bi-play-fill me-1"></i> Start Session
+            </button>
+            <button class="btn btn-outline-secondary rounded-xl" 
+                    [class.btn-success]="ex.completed" 
+                    [class.text-white]="ex.completed"
+                    (click)="toggleComplete(ex, $event)"
+                    title="Toggle Completed">
+              <i class="bi" [class.bi-check-lg]="!ex.completed" [class.bi-check-circle-fill]="ex.completed"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+    @if (filteredExercises.length === 0) {
+      <div class="col-12 text-center py-5">
+        <i class="bi bi-search fs-1 text-muted d-block mb-3"></i>
+        <h5 class="fw-bold">No exercises found</h5>
+        <p class="text-muted small">Try adjusting your search query or switching categories.</p>
+        <button class="btn btn-primary btn-sm rounded-pill" (click)="activeCategory = 'all'; searchQuery = ''">Reset Filters</button>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- Interactive Exercise Logger Modal -->
+@if (selectedExerciseModal) {
+  <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0, 0, 0, 0.45); z-index: 1060;">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg rounded-2xl">
+        <div class="modal-header border-0 pb-0">
+          <div class="d-flex align-items-center gap-2">
+            <div class="bg-primary bg-opacity-10 text-primary p-2 rounded-xl">
+              <i class="bi fs-5" [class]="selectedExerciseModal.icon"></i>
+            </div>
+            <div>
+              <h5 class="modal-title fw-bold mb-0">{{ selectedExerciseModal.title }}</h5>
+              <small class="text-muted">{{ selectedExerciseModal.target }} • {{ selectedExerciseModal.duration }}</small>
+            </div>
+          </div>
+          <button type="button" class="btn-close" (click)="closeExerciseModal()"></button>
+        </div>
+        <div class="modal-body p-4">
+          <!-- Live Telemetry Simulation View -->
+          <div class="bg-dark rounded-2xl p-4 text-center text-white mb-4 position-relative">
+            <span class="badge bg-danger rounded-pill position-absolute top-0 start-0 m-3">
+              <i class="bi bi-record-circle-fill me-1"></i> BIOFEEDBACK SENSOR CONNECTED
+            </span>
+            <div class="py-4">
+              <h1 class="display-4 fw-bold mb-0 text-success">45°</h1>
+              <small class="text-white-50">Current Knee Joint Flexion Angle</small>
+            </div>
+            <div class="small text-white-50"><i class="bi bi-check-circle-fill text-success me-1"></i> Form Alignment: Optimal (96% Symmetrical)</div>
+          </div>
+
+          <!-- Instructions -->
+          <div class="mb-4">
+            <label class="form-label small fw-bold text-muted">CLINICAL GUIDANCE</label>
+            <div class="p-3 bg-light rounded-xl small text-muted">{{ selectedExerciseModal.instructions }}</div>
+          </div>
+
+          <!-- Inputs -->
+          <div class="row g-3 mb-3">
+            <div class="col-6">
+              <label class="form-label small fw-bold text-muted">COMPLETED REPETITIONS</label>
+              <input type="number" class="form-control" [(ngModel)]="completedReps" min="1" max="100">
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-bold text-muted">PAIN SCORE (VAS 0 - 10)</label>
+              <div class="d-flex align-items-center gap-2">
+                <input type="range" class="form-range" [(ngModel)]="painRating" min="0" max="10">
+                <span class="badge bg-danger bg-opacity-10 text-danger fw-bold fs-6">{{ painRating }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-0 d-flex gap-2">
+          <button type="button" class="btn btn-outline-secondary rounded-xl flex-grow-1" (click)="closeExerciseModal()">Cancel</button>
+          <button type="button" class="btn btn-success rounded-xl flex-grow-1" (click)="saveSessionLog()">
+            <i class="bi bi-check-lg me-1"></i> Save Session & Complete
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
