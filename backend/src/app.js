@@ -3,9 +3,31 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import authRouter from './routes/authRoutes.js';
+import mongoose from 'mongoose';
 
 // Initialize express app
 const app = express();
+// Connect to MongoDB on Vercel (serverless)
+let dbPromise = null;
+if (process.env.VERCEL) {
+  app.use(async (req, res, next) => {
+    try {
+      if (mongoose.connection.readyState !== 1) {
+        if (!dbPromise) {
+          dbPromise = mongoose.connect(process.env.MONGODB_URI, {
+            serverSelectionTimeoutMS: 15000
+          });
+        }
+        await dbPromise;
+      }
+      next();
+    } catch (err) {
+      dbPromise = null;
+      next(err);
+    }
+  });
+}
+app.set('trust proxy', 1);
 
 // Set security HTTP headers
 app.use(helmet());
